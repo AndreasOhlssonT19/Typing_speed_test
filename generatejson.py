@@ -4,7 +4,7 @@ import json
 def ensure_settings():
     dictionary ={ 
         "app_theme" : "DarkTeal9", 
-        "game_lenght" : [0, 100]
+        "sentence_lenght" : [0, 100]
     }
 
     try:
@@ -19,7 +19,7 @@ def ensure_settings():
 def update_settings(selected_theme, sentence_length_beginning, sentence_length_end):
     dictionary = {}
     dictionary["app_theme"] = selected_theme
-    dictionary["game_lenght"] = [sentence_length_beginning, sentence_length_end]
+    dictionary["sentence_lenght"] = [sentence_length_beginning, sentence_length_end]
 
     with open("settings.json", "w") as outfile: 
         json.dump(dictionary, outfile)
