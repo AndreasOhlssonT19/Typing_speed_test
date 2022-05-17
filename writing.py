@@ -18,12 +18,13 @@ def correct_random_sentence(sentence_to_write, sentence_length_beginning, senten
             break
     return sentence_to_write
 
-#check writing
+#checks if the word is correct
 def word_is_correct(index, pastuserinput, gametextwords):
     if pastuserinput.split()[index] == gametextwords[index]:
         return True
     return False
 
+#removes unnecessary blankspaces
 def remove_space_before_word(text):
     new_begin = 0
     for character in text:
