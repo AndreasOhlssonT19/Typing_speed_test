@@ -36,7 +36,7 @@ def set_layout(game_board_visability = True, app_setting_visability = False, gam
             sg.Radio("Medium", 1, key="-medium_sentence-", enable_events=True),
             sg.Radio("Long", 1, key="-long_sentence-", enable_events=True),
             sg.Radio("Very long", 1, key="-very_long_sentence-", enable_events=True),
-            sg.Radio("Extreamly long", 1, key="-extremely_long_sentence-", enable_events=True)]
+            sg.Radio("Extremely long", 1, key="-extremely_long_sentence-", enable_events=True)]
     ]
 
     app_settings = [
@@ -92,6 +92,7 @@ sentence_to_write_lenght = int(len(sentence_to_write_words))
 
 #inputted user text variables
 past_inputted_text = ""
+number_of_writen_words = 0
 correct_words = 0
 incorrect_words = 0
 
@@ -127,6 +128,7 @@ while True:
     if " " in currently_inputted_text:
         past_inputted_text = past_inputted_text + currently_inputted_text
         currently_inputted_text = ""
+        number_of_writen_words += 1
         if word_is_correct(len(past_inputted_text.split())-1, past_inputted_text, sentence_to_write_words):
             correct_words += 1
         else:
@@ -136,8 +138,9 @@ while True:
     #prevents written words from exceeding specified character limit 
     currently_inputted_text = currently_inputted_text[:19]
 
-    if len(past_inputted_text) == 5:
-        past_inputted_text == past_inputted_text[1:]
+    #prevents past inputted words from exceeding specified character limit
+    if len(past_inputted_text.split()) > 10:
+        past_inputted_text = past_inputted_text.split(' ', 1)[1]
 
     #updates the performance layout
     if is_game_active == True:
@@ -152,15 +155,17 @@ while True:
         sentence_to_write_lenght = int(len(sentence_to_write_words))
         currently_inputted_text = ""
         past_inputted_text = ""
+        number_of_writen_words = 0
         correct_words = 0
         incorrect_words = 0
         start_time = time.time()
         is_game_active = True
         layout = switch_layout(layout, 1, True)
-
+    
     elif event == "Repeat Game":
         currently_inputted_text = ""
         past_inputted_text = ""
+        number_of_writen_words = 0
         correct_words = 0
         incorrect_words = 0
         start_time = time.time()
@@ -176,7 +181,7 @@ while True:
         layout = switch_layout(layout, 3, False)
 
     #switch to results when the sentance is written
-    if sentence_to_write_lenght == len(past_inputted_text.split()) and is_game_active == True:
+    if sentence_to_write_lenght == number_of_writen_words and is_game_active == True:
         is_game_active = False
         window["-result_given_text-"].update(sentence_to_write)
         update_performance_layout()
