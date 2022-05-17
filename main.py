@@ -17,13 +17,13 @@ def set_layout(game_board_visability = True, app_setting_visability = False, gam
     gameboard_layout = [
         [sg.Text("Sentence to type:", font=("Any 20"))],
         [sg.Text(sentence_to_write, key="-sentence_to_write-", font=("Any 20")),],
-        [sg.Text("", key="-written_text-", font=("Any 40"), size=(100, 1), justification="center")],
-        [sg.InputText(key="-text-", font=("Any 20"), size=(20,1), justification="center")],
+        [sg.Text("", key="-all_inputted_text-", font=("Any 40"), size=(100, 1), justification="center")],
+        [sg.InputText(key="-currently_inputted_text-", font=("Any 20"), size=(20,1), justification="center")],
         [sg.Text("")]
     ]
 
     result_screen = [
-        [sg.Text("Results", font=("Any 20"), size=(100, 1), justification="center")],
+        [sg.Text("Results", font=("Any 20"), size=(150, 1), justification="center")],
         [sg.Text(sentence_to_write, key="-result_given_text-", font=("Any 20"))]
     ]
 
@@ -65,26 +65,10 @@ def switch_layout(layout, switch_layout, toggle_performance_layout):
 
 #update performance layout
 def update_performance_layout():
-    window["-WPM-"].update("WPM: " + str(round(characters*60 / (5*(time.time() - start_time)))))
+    window["-WPM-"].update("WPM: " + str(round(((len(past_inputted_text) / 5) / (time.time() - start_time)) * 60)))
     window["-accuracy-"].update("Accuracy: " + str(round(correct_words / sentence_to_write_lenght * 100)) + " %")
     window["-time_elapsed-"].update("Time: " + str(round(time.time() - start_time)))
     window["-correct_incorrect_words-"].update("Correct/Incorrect: {0}/{1}".format(int(correct_words),int(incorrect_words)))
-
-#change length of the sentence
-def get_sentence_length(event):
-    global sentence_length_beginning, sentence_length_end
-    get_sentence_dict = {
-        "-random_sentence-": (0, 100),
-        "-very_short_sentence-": (0, 5),
-        "-short_sentence-": (5, 10),
-        "-medium_sentence-": (10,15),
-        "-long_sentence-": (15, 20),
-        "-very_long_sentence-": (20, 25),
-        "-extremely_long_sentence-": (25, 30)
-    }
-    if (event in get_sentence_dict.keys()):
-        sentence_length_beginning, sentence_length_end = get_sentence_dict[event]
-        return (sentence_length_beginning, sentence_length_end)
 
 #checks/creates the settings json file
 ensure_settings()
@@ -97,15 +81,12 @@ sentence_lenght = dictionary["sentence_lenght"]
 sentence_length_beginning = sentence_lenght[0]
 sentence_length_end = sentence_lenght[1]
 
+#all change sentence lenght events
 get_sentence_events = ["-random_sentence-", "-very_short_sentence-", "-short_sentence-", "-medium_sentence-", "-long_sentence-", "-very_long_sentence-", "-extremely_long_sentence-"]
 
 #initial sentance
 sentence_to_write = random_question()
-while True:
-    if len(sentence_to_write.split()) < sentence_length_beginning or len(sentence_to_write.split()) > sentence_length_end:
-        sentence_to_write = random_question()
-    else:
-        break
+sentence_to_write = correct_random_sentence(sentence_to_write, sentence_length_beginning, sentence_length_end)
 sentence_to_write_words = sentence_to_write.split()
 sentence_to_write_lenght = int(len(sentence_to_write_words))
 
@@ -137,7 +118,7 @@ while True:
     event, values = window.read(timeout = 100)
 
     #the writing functionality
-    currently_inputted_text = values["-text-"]
+    currently_inputted_text = values["-currently_inputted_text-"]
 
     #removes unnecessary blankspaces
     currently_inputted_text = remove_space_before_word(currently_inputted_text)
@@ -150,29 +131,22 @@ while True:
             correct_words += 1
         else:
             incorrect_words += 1
-        window["-text-"].update("")
+        window["-currently_inputted_text-"].update("")
 
     #prevents written words from exceeding specified character limit 
     currently_inputted_text = currently_inputted_text[:19]
 
-    #updates inputed text
-    window["-written_text-"].update(past_inputted_text + currently_inputted_text)
-    window["-text-"].update(currently_inputted_text)
+    if len(past_inputted_text) == 5:
+        past_inputted_text == past_inputted_text[1:]
 
     #updates the performance layout
-    characters = len(past_inputted_text)
-
     if is_game_active == True:
         update_performance_layout()
 
     #buttons that switch layout    
     if event == "Start New Game":
         sentence_to_write = random_question()
-        while True:
-            if len(sentence_to_write.split()) < sentence_length_beginning or len(sentence_to_write.split()) > sentence_length_end:
-                sentence_to_write = random_question()
-            else:
-                break
+        sentence_to_write = correct_random_sentence(sentence_to_write, sentence_length_beginning, sentence_length_end)
         window["-sentence_to_write-"].update(sentence_to_write)
         sentence_to_write_words = sentence_to_write.split()
         sentence_to_write_lenght = int(len(sentence_to_write_words))
@@ -207,6 +181,10 @@ while True:
         window["-result_given_text-"].update(sentence_to_write)
         update_performance_layout()
         layout = switch_layout(layout, 4, True)
+
+    #updates inputed text
+    window["-all_inputted_text-"].update(past_inputted_text + currently_inputted_text)
+    window["-currently_inputted_text-"].update(currently_inputted_text)
 
     #change length of the sentence
     if event in get_sentence_events:
